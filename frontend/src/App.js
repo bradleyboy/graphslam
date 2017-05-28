@@ -20,26 +20,81 @@ const PlayersList = ({ data }) => {
 
   return (
     <div>
-      {people.map(({ id, firstName, lastName }) => <p key={id}>{`${firstName} ${lastName}`}</p>)}
+      {people.map(({ id, fullName }) => <p key={id}>{fullName}</p>)}
     </div>
   );
 };
 
 const PlayersListWithData = graphql(gql`
-  query PlayersListQuery {
-    people(limit: 10) {
+  query PlayersListQuery($offset: Int = 0, $where: SequelizeJSON = {}) {
+    people(limit: 10, offset: $offset, where: $where) {
       id
-      firstName
-      lastName
+      fullName
     }
   }
-`)(PlayersList);
+`, {
+  options: ({ offset, query }) => {
+    if (query.length) {
+      const like = `%${query}%`;
+
+      return {
+        variables: {
+          offset,
+          where: {
+            "$or": {
+              firstName: {
+                like,
+              },
+              lastName: {
+                like,
+              }
+            }
+          }
+        }
+      };
+    }
+
+    return { variables: { offset } };
+  },
+})(PlayersList);
 
 class App extends Component {
+  state = {
+    page: 1,
+    query: '',
+  }
+
+  nextPage = () => {
+    this.setState({
+      page: this.state.page + 1,
+    });
+  }
+
+  prevPage = () => {
+    this.setState({
+      page: this.state.page - 1,
+    });
+  }
+
+  updateQuery = (e) => {
+    this.setState({
+      query: e.target.value,
+      page: 1,
+    });
+  }
+
   render() {
     return (
       <ApolloProvider client={createClient()}>
-        <PlayersListWithData />
+        <div>
+          <input type="search" value={this.state.query} onChange={this.updateQuery} />
+          <PlayersListWithData
+            offset={(this.state.page - 1) * 10}
+            query={this.state.query}
+          />
+          <button onClick={this.prevPage} disabled={this.state.page === 1}>-</button>
+          <button onClick={this.nextPage}>+</button>
+        </div>
       </ApolloProvider>
     );
   }

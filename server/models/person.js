@@ -1,4 +1,4 @@
-export default (sequelize, { STRING }) => {
+export default (sequelize, { STRING, VIRTUAL }) => {
   const Person = sequelize.define('Person', {
     id: {
       type: STRING,
@@ -12,6 +12,12 @@ export default (sequelize, { STRING }) => {
     lastName: {
       type: STRING,
       field: 'nameLast',
+    },
+    fullName: {
+      type: new VIRTUAL(STRING, ['firstName', 'lastName']),
+      get() {
+        return `${this.firstName} ${this.lastName}`;
+      },
     },
   }, {
     tableName: 'Master',
