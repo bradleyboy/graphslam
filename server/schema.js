@@ -14,9 +14,45 @@ import {
 import models from './models';
 
 const {
-    Person,
-    Award,
+  Person,
+  Appearance,
+  Award,
+  Team,
 } = models;
+
+const teamType = new GraphQLObjectType({
+  name: 'Team',
+  description: 'A team',
+  fields() {
+    return {
+      ...attributeFields(Team),
+    };
+  },
+});
+
+const appearanceType = new GraphQLObjectType({
+  name: 'Appearance',
+  description: "Object representing a player's season with a team",
+  fields() {
+    return {
+      ...attributeFields(Appearance),
+      person: {
+        type: personType,
+        resolve: resolver(Appearance.Person),
+      },
+      team: {
+        type: teamType,
+        resolve(appearance) {
+          return appearance.getTeam({
+            where: {
+              year: appearance.year,
+            },
+          });
+        },
+      },
+    };
+  },
+});
 
 const personType = new GraphQLObjectType({
   name: 'Person',
@@ -24,6 +60,11 @@ const personType = new GraphQLObjectType({
   fields() {
     return {
       ...attributeFields(Person),
+      appearances: {
+        type: new GraphQLList(appearanceType),
+        args: defaultListArgs(Appearance),
+        resolve: resolver(Person.Appearances),
+      },
       awards: {
         type: new GraphQLList(awardType),
         args: defaultListArgs(Award),

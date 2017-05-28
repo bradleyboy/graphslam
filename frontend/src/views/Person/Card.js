@@ -18,6 +18,16 @@ const PersonCardWithData = graphql(gql`
     person(id: $id) {
       id
       fullName
+      awards {
+        award
+        year
+      }
+      appearances {
+        year
+        team {
+          name
+        }
+      }
     }
   }
 `, {

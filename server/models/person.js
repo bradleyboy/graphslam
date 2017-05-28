@@ -22,8 +22,12 @@ export default (sequelize, { STRING, VIRTUAL }) => {
   }, {
     tableName: 'Master',
     classMethods: {
-      associate({ Award }) {
+      associate({ Appearance, Award }) {
         Person.Awards = Person.hasMany(Award, {
+          foreignKey: 'personId',
+        });
+
+        Person.Appearances = Person.hasMany(Appearance, {
           foreignKey: 'personId',
         });
       },
