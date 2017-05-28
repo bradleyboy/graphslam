@@ -1,2 +1,5 @@
 server/node_modules
 frontend/node_modules
+frontend/npm-debug.log
+server/npm-debug.log
+npm-debug.log

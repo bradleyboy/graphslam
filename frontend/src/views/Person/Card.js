@@ -1,17 +1,9 @@
 import React from 'react';
 import { gql, graphql } from 'react-apollo';
+import { shape, string } from 'prop-types';
 
+import LoadingContainer from '../../components/LoadingContainer';
 import PersonCard from '../../components/Person/Card';
-
-const PersonCardContainer = ({ data }) => {
-  const { loading, person } = data;
-
-  if (loading) {
-    return <p>Loading...</p>;
-  }
-
-  return <PersonCard person={person} />;
-};
 
 const PersonCardWithData = graphql(gql`
   query PersonQuery($id: String!) {
@@ -32,12 +24,20 @@ const PersonCardWithData = graphql(gql`
   }
 `, {
   options: ({ id }) => ({ variables: { id } }),
-})(PersonCardContainer);
+})(LoadingContainer(PersonCard));
 
 const PersonCardView = ({ match }) => (
   <div>
     <PersonCardWithData id={match.params.person} />
   </div>
 );
+
+PersonCardView.propTypes = {
+  match: shape({
+    params: shape({
+      person: string.isRequired,
+    }),
+  }).isRequired,
+};
 
 export default PersonCardView;

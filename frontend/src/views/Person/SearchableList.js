@@ -1,17 +1,10 @@
 import React, { Component } from 'react';
 import { gql, graphql } from 'react-apollo';
+import { parse, stringify } from 'query-string';
+import { shape, string, func } from 'prop-types';
 
 import PlayersList from '../../components/Person/List';
-
-const PlayersListContainer = ({ data }) => {
-  const { loading, people } = data;
-
-  if (loading) {
-    return <p>Loading...</p>;
-  }
-
-  return <PlayersList people={people} />;
-};
+import LoadingContainer from '../../components/LoadingContainer';
 
 const PlayersListWithData = graphql(gql`
   query PlayersListQuery($offset: Int = 0, $where: SequelizeJSON = {}) {
@@ -44,42 +37,72 @@ const PlayersListWithData = graphql(gql`
 
     return { variables: { offset } };
   },
-})(PlayersListContainer);
+})(LoadingContainer(PlayersList));
 
 class SearchablePersonList extends Component {
-  state = {
-    page: 1,
-    query: '',
+  static propTypes = {
+    location: shape({
+      search: string,
+      pathname: string.isRequired,
+    }).isRequired,
+    history: shape({
+      push: func.isRequired,
+    }).isRequired,
+  }
+
+  getPage = () => {
+    const query = this.parseQuery();
+    return Number(query.page || 1);
+  }
+
+  getQuery = () => {
+    const query = this.parseQuery();
+    return query.q || '';
   }
 
   nextPage = () => {
-    this.setState({
-      page: this.state.page + 1,
+    this.navigate({ page: this.getPage() + 1 });
+  }
+
+  parseQuery = () => (
+    parse(this.props.location.search)
+  )
+
+  navigate(params) {
+    const { pathname, search } = this.props.location;
+
+    this.props.history.push({
+      pathname,
+      search: stringify({
+        ...parse(search),
+        ...params,
+      }),
     });
   }
 
   prevPage = () => {
-    this.setState({
-      page: this.state.page - 1,
-    });
+    this.navigate({ page: this.getPage() - 1 });
   }
 
   updateQuery = (e) => {
-    this.setState({
-      query: e.target.value,
-      page: 1,
+    this.navigate({
+      q: e.target.value.length ? e.target.value : undefined,
+      page: undefined,
     });
   }
 
   render() {
+    const page = this.getPage();
+    const query = this.getQuery();
+
     return (
       <div>
-        <input type="search" value={this.state.query} onChange={this.updateQuery} />
+        <input type="search" value={query} onChange={this.updateQuery} />
         <PlayersListWithData
-          offset={(this.state.page - 1) * 10}
-          query={this.state.query}
+          offset={(page - 1) * 10}
+          query={query}
         />
-        <button onClick={this.prevPage} disabled={this.state.page === 1}>-</button>
+        <button onClick={this.prevPage} disabled={page === 1}>-</button>
         <button onClick={this.nextPage}>+</button>
       </div>
     );

@@ -24,7 +24,11 @@ const App = () => (
     <Router>
       <div>
         <Switch>
-          <Route exact path="/" component={SearchablePersonList} />
+          <Route
+            exact
+            path="/"
+            component={SearchablePersonList}
+          />
           <Route
             path="/person/:person"
             component={PersonCard}
